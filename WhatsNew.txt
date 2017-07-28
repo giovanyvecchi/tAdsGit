@@ -1,0 +1,142 @@
+VERSION 1707
+* Nova versão de tAds. Veja em TAdsClass.chm as alterações
+
+
+VERSION 2.1f - 03/02/2015
+* Novas funções relacionadas as permissões de usuarios. Incluir Prg \Source\TAdsUsers.prg
+
+  - TAds_CreateUser(f_nConnection,f_cUserName,f_cPassWord,f_cComment)
+  - TAds_ModifyUserProperty(f_nConnection,f_cUserName,f_cNewPassWord)
+  - TAds_DropUser(f_nConnection,f_cUserName)
+  - TAds_CreateGroup(f_nConnection,f_cGroupName,f_cComment)
+  - TAds_ModifyGroupProperty(f_nConnection,f_cGroupName,f_cDataBaseProperty,f_cComment)
+  - TAds_DropGroup(f_nConnection,f_cGroupName)
+  - TAds_AddUserToGroup(f_nConnection,f_cUserName,f_cGroupName)
+  - TAds_RemoveUserFromGroup(f_nConnection,f_cUserName,f_cGroupName)
+
+VERSION 2.1e - 11/11/2014
+*Foram atualizados as Libs do RddAds do ultimo SVN. Recompile usando as Libs:
+  - \Libs\Ace32_10.1.lib
+  - \Libs\RddAds_10.1.lib
+
+Removido em \Ads Install\Ads101_Setup.exe.
+Descompacte o arquivo \Ads Install\Ads10.1_Redistribute.zip na pasta de seu projeto 
+
+
+VERSION 2.1d - 04/11/2014
+* New Data
+  nTpCallRdd := Tipo de Chamada do Method NewRdd() 1 ou 2
+  - 1-Chamada diretamente pelo codigo da linha do prg
+  - 2-Chamada de dentro da classe da tabela 
+  nTpCallRdd serve para informar de onde a tabela esta sendo chamada para informar em PROCNAME e PROCLINE a linha de codigo correta.
+  Antes quando carregado pela classe da tabela gerada por TAds_CreateClassFromDatabase() a visão da linha de código ficava sempre
+  no method OpenRdd da classe da tabela. Agora informando o tipo de chamada podemos ver de onde o procedimento foi invocado.
+
+VERSION 2.1c
+============
+* Bug resolvido em Method FieldPos
+* Method VarGet() agora apresentara erro caso o nome do campo não seja encontrado  
+
+
+VERSION 2.1b
+============
+* Novos Methods
+  - Method DataLoadToFR(f_oFastRep,f_cTituloGrupo) > Parametriza Grupos e Variaveis para o objeto FastReport
+  Exemplo:
+  oFastRep       := frReportManager():new()
+  oFastRep:SetIcon(1)
+  oFastRep:ClearDataSets()
+  oFastRep:LoadLangRes( "brazil.frc")      
+  oFastRep:SetTitle( "Dados do Cliente" )        
+  oFastRep:PreviewOptions:SetAllowEdit( .F. ) 
+  oFastRep:PreviewOptions:SetZoomMode(2)
+  oFastRep:ClearDataSets()
+  oFastRep:LoadFromFile("ClienteDados.fr3") 
+
+  oDb_Clientes := DB_CLIENTES():OpenRdd()
+  oDb_Clientes:GoTo(100)                               // Ir para registro 100
+  oDb_Clientes:DataLoadToFR(oFastRep,"Cliente Dados")  // Todos os campos serão parametrizados no Relatorio de Fast Report
+
+  oFastRep:DesignReport()          
+  oFastRep:ClearDataSets()
+  oFastRep:DestroyFR()
+ 
+  -Method DsAddVar(f_cTxtVarInQuery,f_uVarBlock) e DsSetVar(f_cTxtVarInQuery,f_uVarBlock)
+  Exemplo:
+  
+  oDs_ListaCliente := tAds():DsNew(1)
+  oDs_ListaCliente:cQrySql := "Select * from CLIENTES Where DT_ANIVER >= _DtHoje_ and DT_ANIVER <= _DtSemana_ Order By DT_ANIVER"
+  oDs_ListaCliente:DsAddVar("_DtHoje_",Date())
+  oDs_ListaCliente:DsAddVar("_DtSemana_",Date()+7)
+  oDs_ListaCliente:DsExecute()
+  
+  (oDs_ListaCliente:cAlias)->(xBrowse())
+  
+  oDs_ListaCliente:End()
+  
+  oDs_MyQuery := tAds():DsNew(1)
+  oDs_MyQuery:cQrySql := "Select * from CLIENTES Where SALARIO > _Salario_"
+  oDs_MyQuery:DsAddVar("_Salario_",1200.00)
+  oDs_MyQuery:DsExecute()
+  (oDs_MyQuery:cAlias)->(xBrowse())
+  oDs_MyQuery:End()  
+
+  oDb_Clientes := tAds():NewRdd("CLIENTES")  
+  
+  oDs_MyQuery := tAds():DsNew(1)
+  oDs_MyQuery:cQrySql := "Select * from VENDAS Where COD_CLIENTE == _CodigoCliente_"
+  oDs_MyQuery:DsAddVar("_CodigoCliente_",{||oDb_Clientes:VarGet("CODIGO")})
+  
+  Do While !oDb_Clientes:Eof()
+
+    oDs_MyQuery:DsExecute()
+
+    oDb_Clientes:Skip()
+
+  EndDo
+
+
+VERSION 2.1a
+============
+* Novos Methods da classe tAds em tAds.prg
+  - Method KeyNo() > Retorna o numero do atual registro ou pelo index conforme o Tag focado.
+                     Em sql retorna a posição do resultado da query
+  - Method GetRelKeyPos() > Retorna a posição relativa do cursor
+  - Method SetRelKeyPos() > Posiciona o registro relativo ao cursor da tabela
+  - Method DataLoad() > Carregar os conteudos dos campos para variaveis DATA com nomes dos campos. Ver DATA lBufferOnSkip para carregamento automatico
+  - Method DataBlank() > Atribui as Variaveis DATA os valores em branco
+  - Method DataSave() > Salva os conteudos das Variaveis DATA para o registro da tabela.
+  
+  Nova Classe tCtrlxBrw() Para configurar o esquema de navegação em xBrowse de Fivewin com a Classe tAds
+  Ex:
+   
+   ::oDb_Clientes := DB_CLIENTES():OpenRdd()
+   
+   ::oBrw := TXBrowse():New( ::oWnd )
+   ::oBrw:cAlias           := ::oDb_Clientes:cAlias
+   ::oBrwCartorios:nTop    := 41
+   ::oBrw:nLeft            := 228
+   ::oBrw:nBottom          := ::oWnd:nHeight - 80
+   ::oBrw:nRight           := ::oWnd:nWidth - 1
+
+   ::oBrw:SetRDD()
+   ::oBrw:CreateFromCode()
+
+   ::oCtrlBrw := tCtrlxBrw():New(::oBrw,::oDb_Clientes)
+   
+   Novo help de tAds > Pasta .\HelpTads\HelpTads.chm
+      Obs: O help de Tads não esta completo. Será contruido conforme as novas versões.
+ 
+
+VERSION 2.1
+===========
+
+* Função para verificar a Versão de tAds
+  - tAds_Version() -> 2.1
+
+* Novas funções para efeitos de transações em multi conexão
+  - tAds_Begintransaction(f_nConnection)
+  - tAds_CommitTransaction(f_nConnection)
+  - tAds_RollBackTransaction(f_nConnection)
+  Use f_nconnection para determinar qual conexão deseja aplicar as funções.
+  Caso f_nConnection igual a Nil, sera aplicado na conexão Default determinada por tAdsConnectionDefault()

@@ -1,0 +1,27 @@
+Error 7200:  AQE Error:  State = 42000;   NativeError = 2115;  [iAnywhere Solutions][Advantage SQL Engine]Expected lexical element not found: <identifier> You are missing the table name after the keyword TABLE. -- Location of error in the SQL statement is: 14
+________________________________________________________________________________
+CREATE TABLE USER ( NOME Char( 30 ), ABREVIADO Char( 24 ), LOJA Char( 3 ), ENDERECO Char( 49 ), NUMERO Char( 6 ), BAIRRO Char( 25 ), CIDADE Char( 30 ), UF Char( 2 ), CEP Char( 9 ), CGC Char( 18 ), INSCREST Char( 18 ), RESPONSA Char( 30 ), TELEFONE Char( 9 ), FAX Char( 9 ), APELIDO Char( 10 ), COMENT1 Char( 49 ), COMENT2 Char( 49 ), COMENT3 Char( 49 ), COMENT4 Char( 49 ), COMENT5 Char( 49 ), COMENT6 Char( 49 ), TELAVENDA1 Char( 12 ), TELAVENDA2 Char( 12 ), TELAVENDA3 Char( 12 ), CAMINHOSV Char( 30 ), CAMINHOCX Char( 30 ), CAMINHORT Char( 30 ), CAMINHOREY Char( 30 ), FECHADO Char( 49 ), CODREY Numeric( 7 , 0) , VENDREY Numeric( 5 , 0) , SENHAREY Char( 5 ) ) IN DATABASE; 
+EXECUTE PROCEDURE sp_ModifyTableProperty( 'USER','Table_Auto_Create','True', 'APPEND_FAIL', 'USERfail');
+EXECUTE PROCEDURE sp_ModifyTableProperty( 'USER','Table_Permission_Level','2', 'APPEND_FAIL', 'USERfail');
+EXECUTE PROCEDURE sp_ModifyTableProperty( 'USER','Table_Memo_Block_Size','         8', 'APPEND_FAIL', 'USERfail');
+EXECUTE PROCEDURE sp_ModifyTableProperty( 'USER','Triggers_Disabled','False', 'APPEND_FAIL', 'USERfail');
+
+________________________________________________________________________________
+Called from: C:\SVN\PRG\PARTESNEW\TAds\Source\tAdsManager.prg => TADS_CREATETABLEFROMCODE(490)
+Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\FunPrivadas\Funcoes_Privadas.prg => TADS_INCLUDEDBFTOADT(269)
+Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\GerarProjeto\GerarProjeto.prg => GERARPROJETO:GERAR(133)
+Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\GerarProjeto\GerarProjeto.prg => GERAR_PROJETO_TADS(9)
+Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\Inicio\Main.prg => (b)MAINPROGRAM_STARTDIALOG(193)
+Called from: .\source\classes\BUTTON.PRG => TBUTTONBMP:CLICK(157)
+Called from: .\source\classes\CONTROL.PRG => TBUTTON:HANDLEEVENT(1654)
+Called from: .\source\classes\BUTTONB.PRG => TBUTTONBMP:HANDLEEVENT(189)
+Called from: .\source\classes\WINDOW.PRG => _FWH(3153)
+Called from:  => SENDMESSAGE(0)
+Called from: .\source\classes\DIALOG.PRG => TDIALOG:COMMAND(379)
+Called from:  => TWINDOW:HANDLEEVENT(0)
+Called from: .\source\classes\DIALOG.PRG => TDIALOG:HANDLEEVENT(886)
+Called from:  => DIALOGBOX(0)
+Called from: .\source\classes\DIALOG.PRG => TDIALOG:ACTIVATE(270)
+Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\Inicio\Main.prg => MAINPROGRAM:STARTDIALOG(204)
+Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\Inicio\Main.prg => MAIN(8)
+

@@ -1,0 +1,265 @@
+Application
+===========
+   Path and name: R:\tAds_2\Util\Dbf2Advantage\Dbf2Advantage.EXE (32 bits)
+   Size: 3,192,320 bytes
+   Compiler version: Harbour 3.2.0dev (Rev. 17747)
+   FiveWin  Version: FWH 12.04
+   Windows version: 6.2, Build 9200 
+
+   Time from start: 0 hours 2 mins 18 secs 
+   Error occurred at: 29/05/2014, 00:09:27
+   Error description: Error DBCMD/2001  Workarea nÆo est  em uso: DBAPPEND
+
+Stack Calls
+===========
+   Called from:  => DBAPPEND( 0 )
+   Called from: C:\SVN\PRG\PARTESNEW\TAds\Source\tAdsFunctionOld.prg => TADS_COPYRECNO( 132 )
+   Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\FunPrivadas\Funcoes_Privadas.prg => TADS_INCLUDEDBFTOADT( 308 )
+   Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\GerarProjeto\GerarProjeto.prg => GERARPROJETO:GERAR( 133 )
+   Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\GerarProjeto\GerarProjeto.prg => GERAR_PROJETO_TADS( 9 )
+   Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\Inicio\Main.prg => (b)MAINPROGRAM_STARTDIALOG( 193 )
+   Called from: .\source\classes\BUTTON.PRG => TBUTTONBMP:CLICK( 157 )
+   Called from: .\source\classes\CONTROL.PRG => TBUTTON:HANDLEEVENT( 1654 )
+   Called from: .\source\classes\BUTTONB.PRG => TBUTTONBMP:HANDLEEVENT( 189 )
+   Called from: .\source\classes\WINDOW.PRG => _FWH( 3153 )
+   Called from:  => SENDMESSAGE( 0 )
+   Called from: .\source\classes\DIALOG.PRG => TDIALOG:COMMAND( 379 )
+   Called from:  => TWINDOW:HANDLEEVENT( 0 )
+   Called from: .\source\classes\DIALOG.PRG => TDIALOG:HANDLEEVENT( 886 )
+   Called from:  => DIALOGBOX( 0 )
+   Called from: .\source\classes\DIALOG.PRG => TDIALOG:ACTIVATE( 270 )
+   Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\Inicio\Main.prg => MAINPROGRAM:STARTDIALOG( 204 )
+   Called from: C:\SISTEMAS\TADS\Util\Dbf2Advantage\Prgs\Inicio\Main.prg => MAIN( 8 )
+
+System
+======
+   CPU type: Intel(R) Core(TM) i3-4000M CPU @ 2.40GHz 2400 Mhz
+   Hardware memory: 6060 megs
+
+   Free System resources: 90 %
+        GDI    resources: 90 %
+        User   resources: 90 %
+
+   Windows total applications running: 14
+      1 , 
+      2 , C:\Program Files (x86)\Advantage 10.10\ARC\arc32.exe
+      3 , C:\Program Files (x86)\CyberLink\Power2Go8\Power2GoExpress8.exe
+      4 , C:\Program Files (x86)\Skype\Phone\Skype.exe
+      5 , C:\Program Files (x86)\VIVO INTERNET\VIVO INTERNET.exe
+      6 BavTray, C:\Program Files (x86)\Baidu Security\Baidu Antivirus\BavTray.exe
+      7 CL RC Engine3 Dummy Winidow, C:\Program Files (x86)\CyberLink\PowerDVD10\PDVD10Serv.exe
+      8 DataCardMonitor, C:\ProgramData\DatacardService\DCSHelper.exe
+      9 GDI+ Window, C:\Program Files (x86)\CyberLink\Power2Go8\CLMLSvc_P2G8.exe
+     10 Gerando Dicionario de dados., R:\tAds_2\Util\Dbf2Advantage\Dbf2Advantage.EXE
+     11 HP CoolSense, C:\Program Files (x86)\Hewlett-Packard\HP CoolSense\CoolSense.exe
+     12 HPMSGSVC, C:\Program Files (x86)\Hewlett-Packard\HP System Event\HPMSGSVC.exe
+     13 OfficePowerManagerWindow, C:\Program Files\Microsoft Office 15\Root\VFS\ProgramFilesCommonX86\Microsoft Shared\OFFICE15\CSISYNCCLIENT.EXE
+     14 {94F11419-869E-47aa-9563-F48591285CAD}, C:\Program Files (x86)\CyberLink\YouCam\YCMMirage.exe
+
+Variables in use
+================
+   Procedure     Type   Value
+   ==========================
+   DBAPPEND
+     Param   1:    O    Class: ERROR
+   TADS_COPYRECNO
+     Local   1:    U    
+     Local   2:    U    
+   TADS_INCLUDEDBFTOADT
+     Param   1:    C    "TMPIMP"
+     Param   2:    C    "TMPADT"
+     Param   3:    L    .T.
+     Local   1:    L    .T.
+     Local   2:    N    0
+     Local   3:    U    
+     Local   4:    N    168
+   GERARPROJETO:GERAR
+     Param   1:    C    "R:\NOTEANT\RAIZ\NFE20\DADOS\USER.DBF"
+     Param   2:    A    Len:    0
+     Param   3:    C    "USER"
+     Param   4:    C    ""
+     Param   5:    O    Class: TMETER
+     Local   1:    A    Len:   32
+     Local   2:    C    ""
+     Local   3:    N    1
+     Local   4:    C    ""
+     Local   5:    N    0
+     Local   6:    L    .T.
+     Local   7:    N    0
+     Local   8:    N    0
+     Local   9:    C    ""
+     Local  10:    L    .T.
+     Local  11:    N    0
+     Local  12:    N    0.00
+     Local  13:    C    ""
+     Local  14:    A    Len:    0
+     Local  15:    A    Len:    0
+     Local  16:    C    ""
+     Local  17:    C    ""
+     Local  18:    A    Len:    0
+     Local  19:    C    ""
+     Local  20:    L    .F.
+   GERAR_PROJETO_TADS
+     Local   1:    C    "R:\NOTEANT\RAIZ\NFE20\DADOS\USER.DBF"
+     Local   2:    C    "USER"
+     Local   3:    N    28
+     Local   4:    A    Len:    0
+     Local   5:    A    Len:    2
+   (b)MAINPROGRAM_STARTDIALOG
+     Param   1:    O    Class: MAINPROGRAM
+     Local   1:    O    Class: GERARPROJETO
+   TBUTTONBMP:CLICK
+     Param   1:    O    Class: TBUTTONBMP
+   TBUTTON:HANDLEEVENT
+   TBUTTONBMP:HANDLEEVENT
+     Param   1:    N    2048
+     Param   2:    N    0
+     Param   3:    N    0
+     Local   1:    U    
+   _FWH
+     Param   1:    N    2048
+     Param   2:    N    0
+     Param   3:    N    0
+     Local   1:    U    
+   SENDMESSAGE
+     Param   1:    N    0
+     Param   2:    N    2048
+     Param   3:    N    0
+     Param   4:    N    0
+     Param   5:    N    16
+     Local   1:    O    Class: TBUTTONBMP
+   TDIALOG:COMMAND
+     Param   1:    N    7081764
+     Param   2:    N    2048
+     Param   3:    N    0
+     Param   4:    N    0
+   TWINDOW:HANDLEEVENT
+     Param   1:    N    451
+     Param   2:    N    7081764
+     Local   1:    O    Class: TBUTTONBMP
+     Local   2:    N    0
+     Local   3:    N    451
+     Local   4:    N    7081764
+   TDIALOG:HANDLEEVENT
+     Param   1:    N    273
+     Param   2:    N    451
+     Param   3:    N    7081764
+   DIALOGBOX
+     Param   1:    N    273
+     Param   2:    N    451
+     Param   3:    N    7081764
+   TDIALOG:ACTIVATE
+     Param   1:    N    4194304
+     Param   2:    C    "MAIN"
+     Param   3:    N    0
+     Param   4:    O    Class: TDIALOG
+   MAINPROGRAM:STARTDIALOG
+     Param   1:    U    
+     Param   2:    U    
+     Param   3:    U    
+     Param   4:    L    .T.
+     Param   5:    U    
+     Param   6:    L    .T.
+     Param   7:    U    
+     Param   8:    U    
+     Param   9:    U    
+     Param  10:    L    .F.
+     Param  11:    L    .F.
+     Local   1:    N    0
+     Local   2:    S    
+     Local   3:    O    Class: TDIALOG
+   MAIN
+     Local   1:    O    Class: MAINPROGRAM
+     Local   2:    A    Len:    1
+     Local   3:    A    Len:    1
+
+Linked RDDs
+===========
+   DBF
+   DBFFPT
+   DBFBLOB
+   DBFCDX
+   DBFNTX
+   ADS
+   ADSADT
+   ADSVFP
+   ADSCDX
+   ADSNTX
+
+DataBases in use
+================
+
+  1:    I_DBFS                             RddName: DBFCDX
+     ==============================
+     RecNo    RecCount    BOF   EOF
+        105          113      .F.   .F.
+
+     Indexes in use                        TagName
+
+     Relations in use
+
+  2:    I_CDXS                             RddName: DBFCDX
+     ==============================
+     RecNo    RecCount    BOF   EOF
+         33           32      .T.   .T.
+
+     Indexes in use                        TagName
+
+     Relations in use
+
+  3:    TMPIMP                             RddName: DBFCDX
+     ==============================
+     RecNo    RecCount    BOF   EOF
+          1            1      .F.   .F.
+
+     Indexes in use                        TagName
+
+     Relations in use
+
+Classes in use:
+===============
+     1 ERROR
+     2 HBCLASS
+     3 HBOBJECT
+     4 SCALAROBJECT
+     5 ARRAY
+     6 BLOCK
+     7 CHARACTER
+     8 DATE
+     9 HASH
+    10 LOGICAL
+    11 NIL
+    12 NUMERIC
+    13 POINTER
+    14 MAINPROGRAM
+    15 TFONT
+    16 TADSCONNECTION
+    17 TWINDOW
+    18 TDIALOG
+    19 TBRUSH
+    20 TCONTROL
+    21 TBITMAP
+    22 TGET
+    23 GET
+    24 TCLIPGET
+    25 TBUTTON
+    26 TBUTTONBMP
+    27 TXBROWSE
+    28 TXBRWCOLUMN
+    29 TSCROLLBAR
+    30 TBTNBMP
+    31 TRECT
+    32 GERARPROJETO
+    33 TLISTBOX
+    34 TMETER
+    35 TADS
+    36 TREG32
+
+Memory Analysis
+===============
+      324 Static variables
+
+   Dynamic memory consume:
+      Actual  Value:          0 bytes
+      Highest Value:          0 bytes
+
