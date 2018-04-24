@@ -1,3 +1,61 @@
+VERSION 1804
+* Novas funções em tAdsSystem.prg
+  - TAds_SystemFunctions(f_nConnection) > Array com nomes e propriedades das funções presentes no dicionario de dados
+  - TAds_SystemFunctionsNames(f_nConnection) > Array com os nomes das funções presentes no dicionario de dados
+
+* Novos metodos em tCtrlcBrw Class > tCtrlxBrowser.prg
+  - Method tCtrlxBrw_AddGetFilter(f_oGet,f_cFieldsFilter,f_nOpcRddSql )
+    f_oGet > Object Get
+    f_cFieldsFilter > Fields to filter ex "ENDERECO,CIDADE"
+    f_nOpcRddSql > Type filter table: 1-Rdd 2-Sql
+    Ex: oCtrlBrwClients:tCtrlxBrw_AddGetFilter(f_oGetSearch,"NOME,SOBRE_NOME",1)
+
+* Novo prg tAdsBackup.prg com funções para backup e restore
+  - Function tAds_BackupDataBase(f_nConnection,f_cDestinationPath,f_cOptionBackup)
+    f_nConnection      > Numero da Conexão aberta para efetuar Backup
+    f_cDestinationPath > Pasta destino 
+    f_cOptionBackup > Tipo do Backup
+        Include        > Include one or more tables. When using Include, follow it with an equals sign 
+                         followed by a comma-separated list of tables you want to include. 
+        Exclude        > Exclude one or more tables. When using Exclude, follow it with an equals sign 
+                         followed by a comma-separated list of tables you want to exclude.
+        DontOverwrite  > Use DontOverwrite to prevent backup from replacing an existing table during a
+                         restore operation. If you include DontOverwrite and a table being restored
+                         already exists at the restored destination, the result set will include a warning.
+        MetaOnly       > Use MetaOnly if you want to make a backup of the data dictionary files without
+                         actually backing up any of the database's tables.
+        PrepareDiff    > Use PrepareDiff to prepare a database for a differential backup. PrepareDiff
+                         needs to be executed only once, prior to initiating a differential backup.
+        Diff           > Use Diff to initiate a differential backup. Before you create your first
+                         differential backup, you must first execute sp_BackupDatabase 
+                         (or sp_BackupFreeTables) with the PrepareDiff option. Differential backups
+                          are only supported with ADT tables.
+       -Portugues------------------------------------------------------------------------------------------------- 
+        Include        > Incluir uma ou mais tabelas. Ao usar Incluir, siga-o com um sinal de igual
+                         seguido por uma lista de tabelas separadas por vírgula que você deseja incluir.
+        Exclude        > Excluir uma ou mais tabelas. Ao usar Excluir, siga-o com um sinal de igual
+                         seguido por uma lista separada por vírgula de tabelas que você deseja excluir.
+        DontOverwrite  > Use DontOverwrite para impedir que o backup substitua uma tabela existente durante um
+                         restaurar a operação. Se você incluir DontOverwrite e uma tabela sendo restaurada
+                         já existe no destino restaurado, o conjunto de resultados incluirá um aviso.
+        MetaOnly       > Use MetaOnly se você quiser fazer um backup dos arquivos de dicionário de dados sem
+                         na verdade, fazendo o backup de qualquer uma das tabelas do banco de dados.
+        PrepareDiff    > Use PrepareDiff para preparar um banco de dados para um backup diferencial. PrepareDiff
+                         precisa ser executado apenas uma vez, antes de iniciar um backup diferencial.
+        Diff           > Use Diff para iniciar um backup diferencial. Antes de criar seu primeiro
+                         backup diferencial, você deve primeiro executar sp_BackupDatabase
+                         (ou sp_BackupFreeTables) com a opção PrepareDiff. Backups diferenciais
+                          são suportados apenas com tabelas ADT.
+    Ex: tAds_BackupDataBase(1,"E:\MY_COPIA",nil) // Nova copia completa
+        tAds_BackupDataBase(1,"E:\MY_COPIA",'PrepareDiff') // Prepara a copia existente para apenas atualizações
+        tAds_BackupDataBase(1,"E:\MY_COPIA",'Diff') // Efetua a copia diferenciada com apenas atualizações e inclusões
+
+  - Function tAds_RestoreDataBase(f_cSourcePath,f_cDestinationPath,f_cSourcePassword)
+    f_cSourcePath      > Pasta e o nome do dicionario de dados que deseja restaurar
+    f_cDestinationPath > Pasta e nome do cidionario de dados que deseja criar pela restauração
+    f_cSourcePassword  > PassWord/senha do usuario 'adssys' do dicionario de dados de origem
+    Ex: tAds_RestoreDataBase("E:\MY_COPIA\MyDataDictionary.add","C:\SERVICE\DADOS\MyDataDictionary.add","12345")
+
 VERSION 1707
 * Nova versão de tAds. Veja em TAdsClass.chm as alterações
 

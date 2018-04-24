@@ -279,6 +279,9 @@ FUNCTION TAds_StructToScript(f_aStructPointer)
     Endif  
     cTmp := AllTrim(Str(Int(nTmp)))
     cStructRetorno += " , " + cTmp + ") "
+  Elseif f_aStructPointer[2] == "Q"  
+    cTmp := AllTrim(Str(Int(f_aStructPointer[3])))
+    cStructRetorno += " VarChar( " + cTmp + " )"
   Elseif f_aStructPointer[2] == "I"  
     cStructRetorno += " Integer"
   Elseif f_aStructPointer[2] == "B"  
@@ -347,7 +350,7 @@ FUNCTION TAds_TableExist(f_nConnection,f_cTableName)
 
 RETURN lExist
 ///////////////////////////////////////////////////////////////////////////////
-// TAds_TableErase - Reindex Table
+// TAds_TableErase - Erase Table
 // f_nConnection  > Number Connection in tAdsConnection
 // f_cTableName   > Name of Table
 FUNCTION TAds_TableErase(f_nConnection,f_cTableName)
@@ -372,13 +375,15 @@ FUNCTION TAds_TableErase(f_nConnection,f_cTableName)
   ///? "TAds_TableExist", f_cTableName
   
   If !TAds_TableExist(f_nConnection,f_cTableName)
-    LogFile("tAdsError.log",{"TAds_TableErase - TAds_TableExist() / Incorrect erase / Not Exist table: "+;
+    TADS_LOGFILE("tAdsError.log",{"TAds_TableErase - TAds_TableExist() / Incorrect erase / Table not exist: "+;
                              f_cTableName +" Con: "+Alltrim(Str(f_nConnection)), ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
     st_lExeTableErase := .F.
     Return .T.
   EndIf
+
+  ////? HB_TADS_LOGFILE()
     
-  If f_nConnection == 121
+  If f_nConnection == 121 // Temporary Table local
     
     For iFor := 1 to 50
       AdsConnection(tAds_GetConnectionHandle(121))
@@ -386,7 +391,7 @@ FUNCTION TAds_TableErase(f_nConnection,f_cTableName)
       If lExecute
         Exit 
       Else
-        LogFile("tAdsError.log",{"iFor = "+Alltrim(Str(iFor))+" Con: "+AllTrim(Str(121)),;
+        TADS_LOGFILE("tAdsError.log",{"iFor = "+Alltrim(Str(iFor))+" Con: "+AllTrim(Str(121)),;
                                  "TAds_TableErase - AdsDDRemoveTable / Not Remove table: "+f_cTableName, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
         hb_idleSleep(.1)
       EndIf
@@ -401,7 +406,7 @@ FUNCTION TAds_TableErase(f_nConnection,f_cTableName)
 
   EndIf
   
-  If f_nConnection == 121 
+  If f_nConnection == 121 // Temporary Table local
     For iFor := 1 to 80 
       fErase(tAds_GetPathTemp()+f_cTableName+".adt")
       fErase(tAds_GetPathTemp()+f_cTableName+".adi")
@@ -413,7 +418,7 @@ FUNCTION TAds_TableErase(f_nConnection,f_cTableName)
       EndIf
     Next
     If File(tAds_GetPathTemp()+f_cTableName+".adt")
-      LogFile("tAdsError.log",{"TAds_TableErase() - Not fErase "+f_cTableName, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
+      TADS_LOGFILE("tAdsError.log",{"TAds_TableErase() - Not fErase "+f_cTableName, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
     EndIf
   EndIf
   
@@ -521,7 +526,7 @@ FUNCTION TAds_CreateTableFromCode(f_nConnection,f_cTableName,f_aStruct,f_cDescri
       If !File(tAds_GetPathTemp()+f_cTableName+".adt")
         Exit
       Else
-        LogFile("tAdsError.log",{"iFor = "+AllTrim(Str(iFor))+" Con: "+AllTrim(Str(121)),;
+        TADS_LOGFILE("tAdsError.log",{"iFor = "+AllTrim(Str(iFor))+" Con: "+AllTrim(Str(121)),;
                                  "TAds_CreateTableFromCode() - fErase Error table "+f_cTableName, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
         hb_idleSleep(.3)
       EndIf
@@ -538,7 +543,7 @@ FUNCTION TAds_CreateTableFromCode(f_nConnection,f_cTableName,f_aStruct,f_cDescri
         Exit
       Else
         ///? "Create error in Dictionary Temp",f_cTableName
-        LogFile("tAdsError.log",{"iFor = "+AllTrim(Str(iFor))+" Con: "+AllTrim(Str(121)),;
+        TADS_LOGFILE("tAdsError.log",{"iFor = "+AllTrim(Str(iFor))+" Con: "+AllTrim(Str(121)),;
                                  "TAds_CreateTableFromCode() - Create Error "+f_cTableName, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
         hb_idleSleep(.3)
       EndIf
@@ -548,7 +553,7 @@ FUNCTION TAds_CreateTableFromCode(f_nConnection,f_cTableName,f_aStruct,f_cDescri
   EndIf
   
   If !lOkRet
-    LogFile("tAdsError.log",{"Con: "+AllTrim(Str(f_nConnection)),;
+    TADS_LOGFILE("tAdsError.log",{"Con: "+AllTrim(Str(f_nConnection)),;
                              "TAds_CreateTableFromCode() - Create Error "+f_cTableName, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
     Return .F.
   EndIf
@@ -616,7 +621,7 @@ FUNCTION TAds_CreateTableFromCode(f_nConnection,f_cTableName,f_aStruct,f_cDescri
     EndIf
   Next
 
-  oDs_Qry := tAds():DsNew(2,f_nConnection)
+  oDs_Qry := tAds():DsNew(DF_CURSOR_OFF,f_nConnection)
   oDs_Qry:cQrySql := cQry
   lOkRet := oDs_Qry:DsExecute()
   
@@ -654,7 +659,7 @@ FUNCTION TAds_CreateTableFromCode(f_nConnection,f_cTableName,f_aStruct,f_cDescri
   Next
 
   If !Empty(cQry)
-    oDs_Qry := tAds():DsNew(2,f_nConnection)
+    oDs_Qry := tAds():DsNew(DF_CURSOR_OFF,f_nConnection)
     oDs_Qry:cQrySql := cQry
     lOkRet := oDs_Qry:DsExecute()
   Else
@@ -850,15 +855,12 @@ FUNCTION TAds_CreateIndex(f_nConnection,f_cTableName,f_cTagIndex,f_cTagExpr)
   EndIf
 
 RETURN .T.
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 // Copiar um registro de uma tabela para outra tabela 
 // f_oFrom_ObjTable > Source Table object tAds
 // f_oTo_ObjTable   > Destiny Table object tAds
-// lAppend          > Intert new register if true 
+// lAppend          > Insert new register if true (True default) 
 FUNCTION tAds_CopyFieldContents(f_oFrom_ObjTable,f_oTo_ObjTable,lAppend)
 	Local icFor := 0, aStructFrom, aStructTo  
 	Local uTmp  := Nil, nTmpFieldPos := 0

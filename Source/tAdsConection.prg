@@ -12,10 +12,10 @@
 
    #include "hbclass.ch"
 
-	#DEFINE  CRLF CHR(13)+CHR(10)
+  #DEFINE  CRLF CHR(13)+CHR(10)
 
-	#xtranslate MsgInfo(<cMsn>) => Alert( <cMsn> )
-	#xtranslate MsgStop(<cMsn>) => Alert( <cMsn> )
+  #xtranslate MsgInfo(<cMsn>) => Alert( <cMsn> )
+  #xtranslate MsgStop(<cMsn>) => Alert( <cMsn> )
 
    #xcommand DEFAULT <uVar1> := <uVal1> ;
                [, <uVarN> := <uValN> ] => ;
@@ -53,34 +53,35 @@ FUNCTION TADS_START_CONFIG(f_cDirTmp,f_cPassAdsSys)
 
   St_cDirTmp := f_cDirTmp 
   
-	REQUEST DBFCDX , DBFFPT, DBFDBT
+  REQUEST DBFCDX , DBFFPT, DBFDBT
   REQUEST ADS , ADSX, ADSADTX, ADSKeyno, ADSKeycount, AdsGetRelKeyPos,  AdsSetRelKeyPos
-	
-	hb_rddADSRegister()
-	Set( _SET_OPTIMIZE, .T. ) 
-	//Set( _SET_AUTORDER, .T. )
-	
-	//RddRegister( "ADSADTX", 1 )      // ADS for Harbour
-	//RddSetDefault( "ADSADTX" )       // ADS for Harbour
+  
+  hb_rddADSRegister()
+  Set( _SET_OPTIMIZE, .T. ) 
+  //Set( _SET_AUTORDER, .T. )
+  
+  //RddRegister( "ADSADTX", 1 )      // ADS for Harbour
+  //RddSetDefault( "ADSADTX" )       // ADS for Harbour
 
-	RddRegister( "ADS", 1 )      // ADS for Harbour
-	RddSetDefault( "ADS" )       // ADS for Harbour
-	AdsLocking( .T. )
-	AdsRightsCheck( .T. )
-	AdsTestRecLocks( .T. )
-	ADSCACHEOPENTABLES( 10 ) // PADRÃO 0
-	AdsCacheOpenCursors( 126 ) // PADRÃO 25
-	AdsSetDateFormat( "DD/MM/YYYY" )
+  RddRegister( "ADS", 1 )      // ADS for Harbour
+  RddSetDefault( "ADS" )       // ADS for Harbour
+  AdsLocking( .T. )
+  AdsRightsCheck( .T. )
+  AdsTestRecLocks( .T. )
+  ADSCACHEOPENTABLES( 10 ) // PADRÃO 0
+  AdsCacheOpenCursors( 60 ) // PADRÃO 25
+  AdsSetDateFormat( "DD/MM/YYYY" )
   AdsSetEpoch("01/01/1990")
-	AdsSetFileType( 3 ) /// 1 NTX / 2 CDX / 3 ADT
+  AdsSetFileType( 3 ) /// 1 NTX / 2 CDX / 3 ADT
 
   AdsSetCharType(1)
   
-	#ifdef __XHARBOUR__
-		SET(_SET_HARDCOMMIT,.F.)  
-	#else
-		SET(106,.F.) 
-	#endif
+  #ifdef __XHARBOUR__
+    SET(_SET_HARDCOMMIT,.T.)  
+  #else
+    SET(106,.T.) 
+  #endif
+
 
   ///SET(43,.F.)
 
@@ -183,52 +184,49 @@ Method New(f_nConnection,f_lDefault) Class tAdsConnection
 Return Self
 //-----------------------------------------------------------------------------
 Method tAdsConnect() Class tAdsConnection
-	lOCAL lConectou := .F.
-	
-	//? ::cDataDictionary, ::cUserLogin, ::cSenhaConnect
-	
-	lConectou := AdsConnect60( ::cDataDictionary,;
-	                           ::nTpConnect,;
-	                           ::cUserLogin,;
-	                           ::cSenhaConnect,;
-	                           (ADS_COMPRESS_INTERNET+;
-	                            ADS_TCP_IP_CONNECTION+;
-	                            ADS_STORED_PROC_CONN),;
-	                           @::hConnectHandle)
+  lOCAL lConectou := .F.
+  
+  
+  lConectou := AdsConnect60( ::cDataDictionary,;
+                             ::nTpConnect,;
+                             ::cUserLogin,;
+                             ::cSenhaConnect,;
+                             (ADS_COMPRESS_INTERNET+;
+                              ADS_TCP_IP_CONNECTION),;
+                             @::hConnectHandle)
 
-	                           ///(0x0000000C+0x00000010),;
+                             ///(0x0000000C+0x00000010),;
 
 
-	::cSenhaConnect := "0192837465"
-	
-	If !lConectou
-		Return .F.
-	EndIf
+  ::cSenhaConnect := "0192837465"
+  
+  If !lConectou
+    Return .F.
+  EndIf
  
-	ADSCACHEOPENTABLES( 12 ) //64
-	AdsCacheOpenCursors( 256 ) // 128
+  ADSCACHEOPENTABLES( 12 ) //64
+  AdsCacheOpenCursors( 128 ) // 128
   
   ::lConnected    := .T.
-	
+  
 Return .T.
 //-----------------------------------------------------------------------------
 Method tAdsCloseConnect() Class tAdsConnection
   Local hConnectionFocus := AdsConnection()
-	Local hConnectionDefault := tAds_GetConnectionObj(St_nConnectionDefault):hConnectHandle
-	
-	///? hConectionFocus, ::hConnectHandle, tAds_GetConnectionObj(1):hConnectHandle
-	
-	AdsConnection(::hConnectHandle)
-	
-	AdsCloseCachedTables(::hConnectHandle)
+  Local hConnectionDefault := tAds_GetConnectionObj(St_nConnectionDefault):hConnectHandle
+  
+  ///? hConectionFocus, ::hConnectHandle, tAds_GetConnectionObj(1):hConnectHandle
+  
+  AdsConnection(::hConnectHandle)
+  
+  AdsCloseCachedTables(::hConnectHandle)
 
-	//AdsCloseAllTables()
-	//SysWait(2)
-	If !AdsDisconnect(::hConnectHandle)
-	  AdsDisconnect(::hConnectHandle)
-	EndIf
+  //AdsCloseAllTables()
+  If !AdsDisconnect(::hConnectHandle)
+    AdsDisconnect(::hConnectHandle)
+  EndIf
   hb_idleSleep(.5)
-  	  
+      
   If ::hConnectHandle <> hConnectionFocus
     AdsConnection(hConnectionFocus)
   Else
@@ -236,9 +234,9 @@ Method tAdsCloseConnect() Class tAdsConnection
       AdsConnection(hConnectionDefault)
     EndIf
   EndIf
-	
-	::lConnected := .F.
-	
+  
+  ::lConnected := .F.
+  
 Return NIL
 //-----------------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////
@@ -246,7 +244,7 @@ Return NIL
 FUNCTION nCacheAds()
 
   If HB_ISNIL(st_nCacheAds)
-    st_nCacheAds := 256 //120
+    st_nCacheAds := 100
   EndIf
 
 Return st_nCacheAds

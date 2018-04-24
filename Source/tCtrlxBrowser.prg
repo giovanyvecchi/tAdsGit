@@ -9,7 +9,7 @@
 #Define ADS_KEYSET_AOF            04
 #Define ADS_FIXED_AOF             08
 #define ADS_KEEP_AOF_PLAN         10
-
+ 
 //Mode OrdKeyCount
 #define ADS_RESPECTFILTERS                1
 #define ADS_IGNOREFILTERS                 2
@@ -20,7 +20,7 @@ Class tCtrlxBrw ///From TXbrowse
 
   Data oXBrwCtrl, oDbDs_DataBaseAds
   Data bStrData
-  Data oGetDsFilter, nTpCampoFilter, cCampoFilter, lLastRecZero
+  Data aGetsDsFilter, aGetDsChange, nOpcRddSql, cCampoFilter, cVarFilterIni ,lLastRecZero
   Data bChangeBrw
   Data nTpKeyCount, nTpKeyNo, nTpFilterAof
   Data aOrdersCreation
@@ -35,6 +35,7 @@ Class tCtrlxBrw ///From TXbrowse
   Method tCtrlxBrw_Skip(f_nKip)
   
   Method tCtrlxBrw_Seek(f_oBjCol,f_uVar)
+  Method tCtrlxBrw_AddGetFilter(f_oGet,f_cFieldsFilter)
   Method tCtrlxBrw_EditFilterRdd()
   Method tCtrlxBrw_EditFilterSql()
   Method tCtrlxBrw_EditChange()
@@ -44,7 +45,7 @@ Class tCtrlxBrw ///From TXbrowse
 Endclass
 //-----------------------------------------------------------------------------
 Method New(f_oXBrowse,f_oDbDs_DataBaseAds,f_aGetFilter) Class tCtrlxBrw
-  Local oSelf
+  Local oSelf := Hb_qSelf()
 
   // f_aGetFilter[1] > oBjeto Get
   // f_aGetFilter[2] > Tipo Filtro 1=SetAof contains / 2=Sql select Contains
@@ -62,29 +63,19 @@ Method New(f_oXBrowse,f_oDbDs_DataBaseAds,f_aGetFilter) Class tCtrlxBrw
   
   ::oXBrwCtrl:cAlias      := ::oDbDs_DataBaseAds:cAlias
   
+  ::aGetsDsFilter         := {}
+  ::aGetDsChange          := {}
+  
   If !Hb_IsNil(f_aGetFilter)
 
-    ::oGetDsFilter    := f_aGetFilter[1]
-    ::nTpCampoFilter  := f_aGetFilter[2]
-    ::cCampoFilter    := f_aGetFilter[3]
+    ::nOpcRddSql  := f_aGetFilter[2]
+    ::tCtrlxBrw_AddGetFilter(f_aGetFilter[1],f_aGetFilter[3],f_aGetFilter[2])
     
-    If f_aGetFilter[2] == 2 // Sql Contains
-      ::oGetDsFilter:bChange := {||::tCtrlxBrw_EditFilterSql()}
-    
-    ElseIf f_aGetFilter[2] == 1 // Rdd set aof
-
-      ::oGetDsFilter:bChange := {||::tCtrlxBrw_EditFilterRdd()}
-      
-    EndIf
-
-    ::bChangeBrw := ::oXBrwCtrl:bChange
-    ::oXBrwCtrl:bChange    := {||::tCtrlxBrw_EditChange()}
-    ::oXBrwCtrl:bGotFocus  := {||::tCtrlxBrw_EditChange()}
     
   EndIf  
 
   ::aOrdersCreation   := {}
-  ::oXBrwCtrl:bClrSel := {|| { CLR_BLACK, CLR_HGRAY} } // Giovany
+  ///::oXBrwCtrl:bClrSel := {|| { CLR_BLACK, CLR_HGRAY} } // Giovany
   ::SetTAds()
   ::oDbDs_DataBaseAds:Refresh()
 
@@ -93,8 +84,6 @@ Return Self
 Method End() Class tCtrlxBrw
 
   Self := Nil
-
-  ///? "saiu"
 
 Return Nil
 //-----------------------------------------------------------------------------
@@ -215,7 +204,6 @@ Method tCtrlxBrw_SetOrder(f_cObjCol) Class tCtrlxBrw
   //::oXBrwCtrl:aCols[nTmp]:cSortOrder}
   
 Return Nil  
-
 //-----------------------------------------------------------------------------
 Method tCtrlxBrw_Skip(f_nSkip) Class tCtrlxBrw
   Local nSkipper := 0
@@ -290,50 +278,148 @@ LOCAL nRecMarca := ::oDbDs_DataBaseAds:Recno(), cTpData := "", lc_cOrderIn
 
 RETURN NIL
 //-----------------------------------------------------------------------------
-Method tCtrlxBrw_EditFilterRdd() Class tCtrlxBrw
+Method tCtrlxBrw_AddGetFilter(f_oGet,f_cFieldsFilter,f_nOpcRddSql ) Class tCtrlxBrw
+  Local oSelf := Hb_qSelf(), nGetPos := 0, oGetFocus, cTxtGetInit := ""
+  
+  Default f_nOpcRddSql := 1 // 1-Rdd 2-Sql
+
+  ::nOpcRddSql  := f_nOpcRddSql
+  
+  aadd(::aGetsDsFilter,{f_oGet,;                    // 1-object Get
+                        f_cFieldsFilter,;           // 2-Fields Ex: "NAME,ANDRESS,CITY"
+                        f_oGet:VarGet(),;           // 3-Init Val
+                        Nil,;                       // 4-bAction
+                        f_oGet:bChange,;            // 5-bChange
+                        Nil})                       // 6-bGotFocus
+  
+  //aadd(aGetDsChange,f_oGet:bChange)
+   
+  nGetPos := Len(::aGetsDsFilter)
+  
+  ///::cVarFilterIni   := ::aGetsDsFilter:VarGet()
+  oGetFocus     := ::aGetsDsFilter[nGetPos,1]
+  cTxtGetInit   := ::aGetsDsFilter[nGetPos,3]
+  if f_nOpcRddSql == 1
+    oGetFocus:bAction    := {|| oSelf:oDbDs_DataBaseAds:ClearFilter(),;
+                                oGetFocus:VarPut(cTxtGetInit),;
+                                oGetFocus:Refresh(),;
+                                oGetFocus:Refresh(),;
+                                oSelf:tCtrlxBrw_EditFilterRdd(.T.),;
+                                oSelf:oXBrwCtrl:Refresh(),;
+                                oGetFocus:SetFocus()}
+    oGetFocus:bChange    := {||oSelf:tCtrlxBrw_EditFilterRdd()}
+  Else
+    oGetFocus:bAction    := {|| oSelf:oDbDs_DataBaseAds:ClearFilter(),;
+                                oGetFocus:VarPut(cTxtGetInit),;
+                                oGetFocus:Refresh(),;
+                                oGetFocus:Refresh(),;
+                                oSelf:tCtrlxBrw_EditFilterSql(),;
+                                oSelf:oXBrwCtrl:Refresh(),;
+                                oGetFocus:SetFocus()}
+    oGetFocus:bChange    := {||oSelf:tCtrlxBrw_EditFilterSql()}
+  EndIf
+  oGetFocus:bGotFocus  := {||oGetFocus:SelectAll()}
+  
+
+  If hb_IsNil(::bChangeBrw)
+    ::bChangeBrw := ::oXBrwCtrl:bChange
+    ::oXBrwCtrl:bChange    := {||::tCtrlxBrw_EditChange()}
+    ::oXBrwCtrl:bGotFocus  := {||::tCtrlxBrw_EditChange()}
+  EndIf  
+
+Return nil
+//-----------------------------------------------------------------------------
+Method tCtrlxBrw_EditFilterRdd(f_lClear) Class tCtrlxBrw
   Local cTxtDigitacao := "", aTxtDigitacao := {} ,cAof := ""
   Local aCampos := {}
-  Local iForTxt := 0,  iForCampo := 0, cAnd := "", cOr := "", iFor := 0
+  Local iForTxt := 0,  iForCampo := 0, cAndOr := "", cOr := "", cAndGets := "", iFor := 0, iForGets := 0
   Local nRowCounts := 0, nRowFocus := 0, nSeekRecFound := 0, nCountSkip := 0
+  Local cTxtInGets := "", cTxtSeek := ""
   
-  cTxtDigitacao := Alltrim(::oGetDsFilter:cText)
-  
-  If Len(cTxtDigitacao) < 4
-    cTxtDigitacao := ""
-  Else
-    ::lLastRecZero := .F.
-  EndIf
-  
-  aTxtDigitacao := Hb_aTokens(cTxtDigitacao)
+  Default f_lClear := .F.
+  //For iForGets := 1 To Len(::aGetsDsFilter)
+    //cTxt
 
-  aCampos := Hb_aTokens(::cCampoFilter,",")
+  //Next
+  If f_lClear .and. Len(::aGetsDsFilter) == 1
+    Return Nil
+  Endif
   
-  For iForCampo := 1 To Len(aCampos)
-    cAof += cOr +"("
-    For iForTxt := 1 to Len(aTxtDigitacao)
-      cAof += (cAnd + Chr(39)+aTxtDigitacao[iForTxt]+Chr(39)+" $"+aCampos[iForCampo])
-      cAnd := " .and. " 
-    Next
-    cOr     := " .or. "
-    cAnd    := ""
-    cAof += ")"
-  Next
+  For iForGets := 1 To Len(::aGetsDsFilter)
+
+    if ValType(::aGetsDsFilter[iForGets,1]:cText) == "U"
+      //? "loop in U"
+      Loop
+      //? "loop saiu U"
+      ///Return Nil
+    EndIf
     
+    cTxtDigitacao := Alltrim(::aGetsDsFilter[iForGets,1]:cText)
+  
+    If Len(alltrim(cTxtDigitacao)) < 4
+      //? "loop in Len < 4"
+      Loop
+      //? "loop saiu Len < 4"
+    EndIf
+    
+    if Empty(::aGetsDsFilter[iForGets,1]:obtn:cToolTip)
+      ::aGetsDsFilter[iForGets,1]:obtn:cToolTip := "Retirar o Filtro"
+    EndIf 
+  
+    If Len(cTxtDigitacao) < 4
+      cTxtDigitacao := ""
+    Else
+      ::lLastRecZero := .F.
+    EndIf
+    
+    aTxtDigitacao := Hb_aTokens(cTxtDigitacao)
+  
+    ////aCampos := Hb_aTokens(::cCampoFilter,",")
+    aCampos := Hb_aTokens(::aGetsDsFilter[iForGets,2],",")
+    
+    cOr   := ""
+    cAof  += cAndGets+ "( "
+    For iForCampo := 1 To Len(aCampos)
+      cAof += cOr +"("
+      For iForTxt := 1 to Len(aTxtDigitacao)
+        cAof += (cAndOr + Chr(39)+aTxtDigitacao[iForTxt]+Chr(39)+" $"+aCampos[iForCampo])
+        If Len(aCampos) == 1
+          cAndOr  := " .and. "
+        Else
+          cAndOr  := " .and. "
+        EndIf 
+      Next
+      cOr       := " .or. "
+      cAndOr    := ""
+      cAof      += ")"
+    Next
+    cAof += " )"
+    cAndGets   := " .AND. "
+      
+  Next
+  
   If ::lLastRecZero
     Return Nil
   EndIf
 
   If GetKeyState(VK_SHIFT)
-    //msginfo(cAof)
+    ///msginfo(cAof)
   EndIf
-   
+  
+  cTxtSeek  := ::aGetsDsFilter[1,1]:cText
+  If Hb_IsNil(cTxtSeek)
+    cTxtSeek := ""
+  Else
+    cTxtSeek := AllTrim(cTxtSeek)
+  EndIf
+
   ::oDbDs_DataBaseAds:Filter(cAof,,::nTpFilterAof)
   ::oDbDs_DataBaseAds:GoTop()
   nRowCounts := ::oXBrwCtrl:nLen 
 
   If ::oDbDs_DataBaseAds:nOpenType == 1 // Via Rdd
 
-    If !::oDbDs_DataBaseAds:Seek(cTxtDigitacao)
+    If !::oDbDs_DataBaseAds:Seek(cTxtSeek) // cTxtDigitacao
       ::oDbDs_DataBaseAds:GoTop()
       nRowFocus := 1 
     Else 
@@ -357,6 +443,12 @@ Method tCtrlxBrw_EditFilterRdd() Class tCtrlxBrw
 
   EndIf    
 
+  For iFor := 1 to Len(::aGetsDsFilter)
+    If !Hb_IsNil(::aGetsDsFilter[iFor,5])
+      Eval(::aGetsDsFilter[iFor,5])
+    EndIf
+  Next
+
   ::oXBrwCtrl:nRowSel := nRowFocus
   
   ::oXBrwCtrl:Refresh()
@@ -365,7 +457,6 @@ Method tCtrlxBrw_EditFilterRdd() Class tCtrlxBrw
     ///? "aqui"
     Eval(::bChangeBrw)
   EndIf
-
 
   If Len(cTxtDigitacao) < 3
     ::lLastRecZero := .T.
@@ -376,8 +467,8 @@ Return Nil
 Method tCtrlxBrw_EditFilterSql() Class tCtrlxBrw
   Local cTxtDigitacao := ""
 
-  //::oGetDsFilter:Save()
-  cTxtDigitacao := Alltrim(::tCtrlxBrw_EditClearChar(::oGetDsFilter:cText))
+  //::aGetsDsFilter:Save()
+  cTxtDigitacao := Alltrim(::tCtrlxBrw_EditClearChar(::aGetsDsFilter[1,1]:cText))
 
   If Len(cTxtDigitacao) < 5
     cTxtDigitacao := ""
@@ -391,7 +482,7 @@ Method tCtrlxBrw_EditFilterSql() Class tCtrlxBrw
   ///? cTxtDigitacao
 
   ::oDbDs_DataBaseAds:aVarsSql := {{"_TxtDigitacao_",cTxtDigitacao},;
-                                   {"_Campo_",::cCampoFilter}}
+                                   {"_Campo_",::aGetsDsFilter[1,3]}}
   
   ::oDbDs_DataBaseAds:DsExecute()
   ::oXBrwCtrl:Refresh(.T.)
@@ -409,16 +500,28 @@ Method tCtrlxBrw_EditChange() Class tCtrlxBrw
     Return Nil
   EndIf
   
+  If ::nOpcRddSql == 2 // Sql 1
+    If AT(",",::aGetsDsFilter[1,2]) > 0
+      aFields := Hb_aTokens(::cCampoFilter,",")
+    Else
+      aadd(aFields,::aGetsDsFilter[1,2])  
+    EndIf
+    cFirstFielf := Alltrim(aFields[1])
+    ::aGetsDsFilter[1,1]:VarPut(::oDbDs_DataBaseAds:VarGet(cFirstFielf))
+    ::aGetsDsFilter[1,1]:Refresh()
+  EndIf
+  /*
   If AT(",",::cCampoFilter) > 0
     aFields := Hb_aTokens(::cCampoFilter,",")
     cFirstFielf := Alltrim(aFields[1])
-    //::oGetDsFilter:VarPut(::oDbDs_DataBaseAds:VarGet(cFirstFielf))
+    //::aGetsDsFilter:VarPut(::oDbDs_DataBaseAds:VarGet(cFirstFielf))
   Else
     cFirstFielf := Alltrim(::cCampoFilter)
-    ::oGetDsFilter:VarPut(::oDbDs_DataBaseAds:VarGet(cFirstFielf))
-    ::oGetDsFilter:Refresh()
+    //::aGetsDsFilter:VarPut(::oDbDs_DataBaseAds:VarGet(cFirstFielf))
+    //::aGetsDsFilter:Refresh()
   EndIf
-  //::oGetDsFilter:VarPut(::oDbDs_DataBaseAds:VarGet(::cCampoFilter))
+  //::aGetsDsFilter:VarPut(::oDbDs_DataBaseAds:VarGet(::cCampoFilter))
+*/
   
   If !Hb_IsNil(::bChangeBrw)
     ///? "aqui"

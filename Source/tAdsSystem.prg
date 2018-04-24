@@ -164,3 +164,49 @@ FUNCTION TAds_SystemColumnsTable(f_nConnection,f_cTableName)
   oDs_Qry:End()
 
 RETURN aColumns
+///////////////////////////////////////////////////////////////////////////////
+//// List Functions in Data Dictionary (complete coluns)
+FUNCTION TAds_SystemFunctions(f_nConnection) // > array Functions
+  Local aFunctions := {}, nArrayPos := 0
+  Local oDs_Qry
+
+  Default f_nConnection := tAds_GetConnectionDefault()
+  
+  oDs_Qry := tAds():DsNew(1,f_nConnection)
+  oDs_Qry:cQrySql := "SELECT {static} * FROM System.Functions ;"
+  oDs_Qry:DsExecute(10)
+  
+  Do While !oDs_Qry:Eof()
+
+    aadd(aFunctions,Array(7))
+    nArrayPos := Len(aFunctions)
+    aFunctions[nArrayPos,01]  := oDs_Qry:VarGetAlltrim("Name")
+    aFunctions[nArrayPos,02]  := oDs_Qry:VarGetAlltrim("Package")
+    aFunctions[nArrayPos,03]  := oDs_Qry:VarGetAlltrim("Return Type")
+    aFunctions[nArrayPos,04]  := oDs_Qry:VarGetAlltrim("Input Parameters")
+    aFunctions[nArrayPos,05]  := oDs_Qry:VarGetAlltrim("Implementation")
+    aFunctions[nArrayPos,06]  := oDs_Qry:VarGetAlltrim("Comment")
+    aFunctions[nArrayPos,07]  := oDs_Qry:VarGet("User_Defined_Prop")
+
+    oDs_Qry:Skip()
+      
+  EndDo
+ 
+  oDs_Qry:End()
+
+RETURN aFunctions
+///////////////////////////////////////////////////////////////////////////////
+//// List Functions names in Data Dictionary (names only)
+FUNCTION TAds_SystemFunctionsNames(f_nConnection) // > array Functions Names
+  Local aFunctionsComplete := {}, aFunctionsNames := {}
+  Local iFor := 0
+
+  Default f_nConnection := tAds_GetConnectionDefault()
+  
+  aFunctionsComplete  := TAds_SystemFunctions(f_nConnection) 
+  
+  For iFor := 1 To Len(aFunctionsComplete)
+    aadd(aFunctionsNames,aFunctionsComplete[iFor,1])
+  Next
+
+RETURN aFunctionsNames

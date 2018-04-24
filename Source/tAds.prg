@@ -57,7 +57,7 @@ STATIC st_lProcessAutoAlias
 
 FUNCTION tAds_Version() 
 
-RETURN "1707"
+RETURN "1804"
 
 CLASS TAds
 
@@ -90,7 +90,7 @@ CLASS TAds
   Method FieldInfo(f_cCampo) // Retorna vetor com dados da estrutura do campo
   Method FieldPos(f_cCampo) // Retorna a Posição do campo na tabela
   Method FieldBlank(f_cCampo) // Retorna as caracteristica do campo em branco
-  Method FieldSum(f_cCampo) // Soma a tabela referente ao campo 
+  Method FieldSum(f_cCampo,f_uCondition) // Soma a tabela referente ao campo 
 
   METHOD Lock(f_nRecno)
   METHOD RLock(f_nRecno)
@@ -116,6 +116,7 @@ CLASS TAds
 
   METHOD Append()
   METHOD Delete(f_lLock)
+  METHOD Pack()
 
   METHOD Refresh()
 
@@ -313,7 +314,7 @@ METHOD NewRdd(f_cTableName,f_nConexao, f_nCache, f_lExclusive) Class TAds
              "Erro, Ausência de Tabela...")
      ::nOpenStatus := 1
      ::cOpenStatus := "1 - Tabela não encontrada: "+f_cTableName
-      LogFile("tAdsError.log",{"NewRdd() 1 - Tabela não encontrada: "+f_cTableName,;
+      TADS_LOGFILE("tAdsError.log",{"NewRdd() 1 - Tabela não encontrada: "+f_cTableName,;
               "Alias "+cTmpAliasName, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
      RETURN Self
   ENDIF
@@ -327,7 +328,7 @@ METHOD NewRdd(f_cTableName,f_nConexao, f_nCache, f_lExclusive) Class TAds
       If NetErr()
         ::nOpenStatus := 3
         ::cOpenStatus := "3 - Erro acesso Exclusivo tabela: "+f_cTableName
-        LogFile("tAdsError.log",{"NewRdd() 3 - Erro acesso Exclusivo tabela: "+f_cTableName,;
+        TADS_LOGFILE("tAdsError.log",{"NewRdd() 3 - Erro acesso Exclusivo tabela: "+f_cTableName,;
                 "Alias "+cTmpAliasName+" - Ifor "+Alltrim(Str(niFor)), ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
         hb_idleSleep(.3)
         //Return Self
@@ -343,7 +344,7 @@ METHOD NewRdd(f_cTableName,f_nConexao, f_nCache, f_lExclusive) Class TAds
     If NetErr()
       ::nOpenStatus := 3
       ::cOpenStatus := "3 - Erro acesso Exclusivo tabela: "+f_cTableName
-      LogFile("tAdsError.log",{"NewRdd() 3 - Erro acesso Exclusivo tabela: "+f_cTableName,;
+      TADS_LOGFILE("tAdsError.log",{"NewRdd() 3 - Erro acesso Exclusivo tabela: "+f_cTableName,;
               "Alias "+cTmpAliasName, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
       Return Self
     EndIf
@@ -358,7 +359,7 @@ METHOD NewRdd(f_cTableName,f_nConexao, f_nCache, f_lExclusive) Class TAds
     If NetErr()
       ::nOpenStatus := 2
       ::cOpenStatus := "2 - Erro abertura modo compartilhado tabela: "+f_cTableName
-      LogFile("tAdsError.log",{"NewRdd() 2 - Erro abertura modo compartilhado tabela: "+f_cTableName,;
+      TADS_LOGFILE("tAdsError.log",{"NewRdd() 2 - Erro abertura modo compartilhado tabela: "+f_cTableName,;
               "Alias "+cTmpAliasName, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
       Return Self
     EndIf
@@ -383,10 +384,12 @@ METHOD NewRdd(f_cTableName,f_nConexao, f_nCache, f_lExclusive) Class TAds
 
 RETURN Self
 //-----------------------------------------------------------------------------
-METHOD End() Class TAds
+METHOD End(f_lForceCommitLocal) Class TAds
   Local lEnd := .F.
 
-  If ::nOpenType == 1 .and. ::oConexao:nConnection != 121 // Via Rdd USE
+  Default f_lForceCommitLocal := .T.
+
+  If ::nOpenType == 1 .and. ::oConexao:nConnection != 121 .and. f_lForceCommitLocal // Via Rdd USE
     If ::nOpenStatus == 0
       (::cAlias)->(DbCommit())
       (::cAlias)->(AdsFlushFileBuffers())
@@ -397,8 +400,8 @@ METHOD End() Class TAds
   If ::nOpenStatus == 0
     If ::nOpenType == 1   // RDD
       lEnd := (::cAlias)->(DbCloseArea())
-    ElseIf ::nOpenType == 2 // sql select
-      (::cAlias)->(DbCloseArea()) /// Obsoleto-reservado para esquema futuro
+    ElseIf ::nOpenType == 2 // Dbf free tables 
+      (::cAlias)->(DbCloseArea()) /// Obsoleto-reservado para esquema futuro (Usado antes para DBF)
     ElseIf ::nOpenType == 3 // Data Set Sql
       If ::nQryTipo == 1 // Select   
         If ::nErrorSql == 0
@@ -538,9 +541,6 @@ Method DataLoadToFR(f_oFastRep,f_cTituloGrupo,f_lTrimChar,f_aIgnoreFields,f_cPre
     
   For iFor := 1 To Len(aStructTmp)
 
-    if aStructTmp[Ifor,1] == "LIVRO_APON"
-      ///? oSelf:&(aStructTmp[iFor,1]), aStructTmp[Ifor,1]
-    EndIf
     If Ascan(f_aIgnoreFields, aStructTmp[Ifor,1]) == 0
 
       If ValType(oSelf:&(aStructTmp[iFor,1])) == "C"
@@ -606,11 +606,19 @@ Method FieldBlank(f_cCampo) Class TAds
 
 Return uGet
 //-----------------------------------------------------------------------------
-Method FieldSum(f_cCampo) Class TAds
+Method FieldSum(f_cCampo, f_uCondition) Class TAds
   Local nRecnoPos := ::Recno(), nCalcSum := 0
+  Local lCondition := .F.
 
   ::Gotop()
   Do While !::Eof()
+    If !Hb_IsNil(f_uCondition)
+      lCondition := Eval(f_uCondition)
+      If !lCondition
+        ::Skip()
+        Loop
+      EndIf
+    EndIf
     nCalcSum += ::VarGet(f_cCampo)
     ::Skip()
   EndDo
@@ -782,6 +790,16 @@ METHOD Delete(f_lLock) Class TAds
 
 RETURN lDelete
 //-----------------------------------------------------------------------------
+METHOD Pack() Class TAds
+  Local lPack := .F.
+
+  DbSelectArea(::cAlias)
+  lPack := (::cAlias)->(__DbPack())
+  ::Refresh()
+  ::OnSkip()
+
+RETURN lPack
+//-----------------------------------------------------------------------------
 METHOD Refresh() Class TAds
 
   (::cAlias)->(AdsRefreshRecord())
@@ -849,7 +867,7 @@ METHOD VarGet(f_cCampo,f_lRefresh) Class TAds
   nPosField := ::FieldPos(f_cCampo)  
   If nPosField == 0
     ? "Method VarGet() - Field Not Found: "+::cTableName+"->"+f_cCampo, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"
-    LogFile("tAdsError.log",{"Method VarGet() - Field Not Found: "+::cTableName+"->"+f_cCampo, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
+    TADS_LOGFILE("tAdsError.log",{"Method VarGet() - Field Not Found: "+::cTableName+"->"+f_cCampo, ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")"})
     Return Nil
   EndIf
 
@@ -1019,7 +1037,7 @@ METHOD VarGetNumToMoeda(f_cCampo,f_nCasasDecimais,f_lNulo,f_nEspacoPreenche,f_cC
 
   Default f_nCasasDecimais := 2, f_lNulo := .T., f_nEspacoPreenche := 0, f_cCharEspaco := " "
 
-  cRetVal := TAds_Valor(::VarGet(f_cCampo),f_nCasasDecimais,f_lNulo,f_nEspacoPreenche,f_cCharEspaco,.T.)
+  cRetVal := TAds_Valor(::VarGet(f_cCampo),f_nCasasDecimais,f_lNulo,f_nEspacoPreenche,f_cCharEspaco,f_cSifrao)
 
 RETURN cRetVal
 //-----------------------------------------------------------------------------
@@ -1151,6 +1169,7 @@ METHOD SetOrder(f_uOrder,f_cFileBagName,f_lForce) Class TAds
         (::cAlias)->(ADSDELETECUSTOMKEY(lc_cOldOrder))
       EndIf
       CursorWait()
+      //? f_uOrder
       ::CreateIndex( ::cAlias, f_uOrder, f_uOrder, ::cAlias+"->"+f_uOrder, .F.)
       (::cAlias)->(OrdListAdd(::cAlias,Upper(f_uOrder)))
       (::cAlias)->(ADSADDCUSTOMKEY(f_uOrder))
@@ -1178,6 +1197,15 @@ METHOD Seek(f_uOcorrencia,f_cTagOpcional,f_lAproximado,f_lLocateIfNotFound,f_lRe
   lFoundOcorrencia := (::cAlias)->(DbSeek(f_uOcorrencia,f_lAproximado))
 
   If !lFoundOcorrencia .and. f_lLocateIfNotFound
+    TADS_LOGFILE("tAdsError.log",{"Seek() > f_lLocateIfNotFound",;
+                                  "f_uOcorrencia = "+cValtoStr(f_uOcorrencia),;
+                                  "TagIndex:"+cValtoStr(f_cTagOpcional),;
+                                  ProcName(1)+" ("+AllTrim(Str(ProcLine(1)))+")",;
+                                  ProcName(2)+" ("+AllTrim(Str(ProcLine(2)))+")",;
+                                  ProcName(3)+" ("+AllTrim(Str(ProcLine(3)))+")",;
+                                  ProcName(4)+" ("+AllTrim(Str(ProcLine(4)))+")",;
+                                  ProcName(5)+" ("+AllTrim(Str(ProcLine(5)))+")",;
+                                  ProcName(6)+" ("+AllTrim(Str(ProcLine(6)))+")"})
     lFoundOcorrencia := ::Locate(f_cTagOpcional,f_uOcorrencia)
   EndIf
   
@@ -1315,7 +1343,7 @@ METHOD Filter(f_cFilterMask,f_aVarsFormat,f_nTpFiltro) class TAds
 
   IF f_cFilterMask != Nil
 
-     ////AdsIsExprValid (cFilter)
+     //?(::cAlias)->(AdsIsExprValid(f_cFilterMask))
      
      _lFiltro := (::cAlias)->(AdsSetAof(f_cFilterMask,f_nTpFiltro))
 
@@ -1326,7 +1354,7 @@ METHOD Filter(f_cFilterMask,f_aVarsFormat,f_nTpFiltro) class TAds
   ENDIF
 
   ::OnSkip()
-  ::KeyCount()
+  //::KeyCount()
 
 RETURN _lFiltro
 //-----------------------------------------------------------------------------
@@ -1390,6 +1418,7 @@ METHOD AddRecnosInFilter(f_aRecnos) class TAds
   Else
     lOk := .F.
   EndIf
+  ///::RefreshFilter()
   ::OnSkip()
 
 Return lOk
@@ -1689,9 +1718,17 @@ METHOD DsExecute(f_nCache,f_lErrorDisplay) Class TAds
 
     ElseIf cTypeData == "D"
 
-      _cTmpData := DTOS(uResult)
-      _cTmpData := (SubStr(_cTmpData,1,4)+"-"+SubStr(_cTmpData,5,2)+"-"+SubStr(_cTmpData,7,2))
+      if Empty(uResult)              // luiz antonio
+        _cTmpData   := "1900-01-01" // luiz antonio
+      else
+        _cTmpData   := DTOS(uResult)
+        _cTmpData   := (SubStr(_cTmpData,1,4)+"-"+SubStr(_cTmpData,5,2)+"-"+SubStr(_cTmpData,7,2))
+      endif                         // luiz antonio
       _cTmpFormat := "'"+_cTmpData+"'"
+
+      //_cTmpData := DTOS(uResult)
+      //_cTmpData := (SubStr(_cTmpData,1,4)+"-"+SubStr(_cTmpData,5,2)+"-"+SubStr(_cTmpData,7,2))
+      //_cTmpFormat := "'"+_cTmpData+"'"
 
     ElseIf cTypeData == "N"
 
@@ -1726,7 +1763,7 @@ METHOD DsExecute(f_nCache,f_lErrorDisplay) Class TAds
   EndIf
 
   If ::lLogDsExecute
-    LogFile("SqlExec.txt",{st_aCtrlAlias_Monitor[::nOpenAliasCtrl],cQueryTmp,cErrorBuffer})
+    TADS_LOGFILE("SqlExec.txt",{st_aCtrlAlias_Monitor[::nOpenAliasCtrl],cQueryTmp,cErrorBuffer})
   EndIf
   
   IF ::nErrorSql <> 0
@@ -1771,8 +1808,8 @@ METHOD DsExecute(f_nCache,f_lErrorDisplay) Class TAds
     (::cAlias)->(AdsCacheRecords(f_nCache))
 
     If At("{STATIC}",Upper(cQueryTmp)) > 0 ;
-       .or. At("INNER",Upper(cQueryTmp)) > 0 ;
-       .or. At(" JOIN ",Upper(cQueryTmp)) > 0
+       .or. At(" INNER ",Upper(cQueryTmp)) > 0 ;
+       .or. At(" JOIN ",Upper(cQueryTmp)) > 0 
       ::lDsStaticCursors := .T. // Static cursors detect
     EndIf
 
@@ -1833,7 +1870,7 @@ METHOD DsCursorsToArray() Class TAds
   Enddo
   ::GoTop()
   
-Return Nil
+Return ::aDsCursorsData
 //-----------------------------------------------------------------------------
 METHOD DsCursorsToTemp() Class TAds
   Local iFor := 0, iForField := 0, uGet := {}, aFieldStruct := {}
@@ -1853,7 +1890,7 @@ METHOD DsCursorsToTemp() Class TAds
     aFieldStruct := ::aStructTads[iFor]
     If aFieldStruct[2] == "AutoIncrement"
       ::aStructTads[iFor,2] := "N"
-      ::aStructTads[iFor,3] := 10
+      ::aStructTads[iFor,3] := 12
       ::aStructTads[iFor,4] := 0
     EndIf
     cTmp := Upper(aFieldStruct[1])
@@ -1891,11 +1928,11 @@ METHOD DsCursorsToTemp() Class TAds
   (::cTableAliasTmp)->(DbCloseArea())
   (::cAlias)->(DbCloseArea())
   
-  USE (::cTableAliasTmp) ALIAS (::cAlias) NEW EXCLUSIVE
+  USE (::cTableAliasTmp) ALIAS (::cAlias) NEW EXCLUSIVE VIA "ADSADT"
 
   AdsConnection(tAds_GetConnectionHandle(tAds_GetConnectionDefault()))
   
-  ::lDsStaticCursors := .F.
+  ::lDsStaticCursors := .F. // Table via RDD now
 
 Return Nil
 //-----------------------------------------------------------------------------
@@ -1983,6 +2020,36 @@ LOCAL nFor := 0, vText:="", cTmp := ""
  */
  
 Return vText
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+FUNCTION TADS_LOGFILE(f_cLogName,f_aLogs)
+  Local hLogFile
+  Local iFor := 1, aLogsSource := {}, cLogTmpLine := "", cLogLast := Space(36192)
+  Local cLogDtHr := dToc(Date())+"-"+Time()+" > "
+
+
+  If Hb_FileExists(f_cLogName)
+    hLogFile := fOpen(f_cLogName,2)
+    fRead(hLogFile,@cLogLast,36192)
+  Else
+    hLogFile := fCreate(f_cLogName)  
+  EndIf
+
+  If hLogFile == -1
+    Return .F.
+  EndIf
+
+  cLogTmpLine := cLogDtHr
+  For iFor := 1 To Len(f_aLogs)
+    cLogTmpLine += f_aLogs[iFor]+Chr(9)
+  Next
+  cLogTmpLine += CRLF
+  
+  //fWrite(hLogFile,cLogTmpLine,hb_eol())
+  fWrite(hLogFile,cLogTmpLine,hb_eol())
+  fClose(hLogFile)
+
+RETURN .T.
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 /*
